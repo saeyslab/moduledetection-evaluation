@@ -146,42 +146,23 @@ class ModevalKnownmodules:
         self.settings = settings
 
     def run(self, pool):
-        baseline_names = ["permuted", "sticky", "scalefree"]
-        baselines = {baseline_name:pd.read_table("../results/modeval_knownmodules/baselines_" + baseline_name + ".tsv", index_col=[0, 1,2]) for baseline_name in baseline_names}
-
         jobs = []
         manager = mp.Manager()
         scores = manager.dict()
 
         params_pool = []
 
-        i = 0
         for setting in self.settings:
-            modules = Modules(json.load(open("../" + setting["output_folder"] + "modules.json")))
-
-            runinfo = json.load(open("../" + setting["output_folder"] + "runinfo.json"))
-
-            method = json.load(open("../" + setting["method_location"]))
-            dataset = json.load(open("../" + setting["dataset_location"]))
-
-            for regnet_name in dataset["knownmodules"].keys():
-                for knownmodules_name in dataset["knownmodules"][regnet_name].keys():
-                    baselinesoi = {
-                        baseline_name:baseline.ix[(dataset["baselinename"], regnet_name, knownmodules_name)].to_dict()
-                        for baseline_name, baseline in baselines.items()
-                    }
-
-                    params_pool.append((i, modules, regnet_name, knownmodules_name, method, dataset, runinfo, baselinesoi, scores))
-
-                    i+=1
+            params_pool.append((setting, scores))
 
         self.params_pool = params_pool
 
         pool.starmap(modevalworker, params_pool)
 
-        self.scores = pd.DataFrame(list(scores.values()))
+        scores = [scores_line for settingscores in list(scores.values()) for scores_line in settingscores]
+        self.scores = pd.DataFrame(scores)
         self.scores = self.scores[[column for column in self.scores if column not in ["recoveries", "relevances", "recalls", "precisions"]]]
-        self.scores_full = list(scores.values())
+        self.scores_full = scores
 
     def save(self, name, full=True):
         self.scores.to_csv("../results/modeval_knownmodules/" + name + ".tsv", sep="\t")
@@ -193,25 +174,41 @@ class ModevalKnownmodules:
         if full:
             self.scores_full = json.load(open("../results/modeval_knownmodules/" + name + ".json"))
 
-def modevalworker(settingid, modules, regnet_name, knownmodules_name, method, dataset, runinfo, baselines, scores, verbose=False):
-    if verbose:print("▶ " + str(settingid))
-    sys.stdout.flush()
+def modevalworker(setting, scores):
+    baseline_names = ["permuted", "sticky", "scalefree"]
+    baselines = {baseline_name:pd.read_table("../results/modeval_knownmodules/baselines_" + baseline_name + ".tsv", index_col=[0, 1,2]) for baseline_name in baseline_names}
 
-    knownmodules_location = dataset["knownmodules"][regnet_name][knownmodules_name]
-    knownmodules = Modules(json.load(open("../" + knownmodules_location)))
+    modules = Modules(json.load(open("../" + setting["output_folder"] + "modules.json")))
 
-    settingscores = modevalscorer(modules, knownmodules, baselines)
+    runinfo = json.load(open("../" + setting["output_folder"] + "runinfo.json"))
 
-    settingscores.update(method["params"])
-    settingscores.update(dataset["params"])
-    settingscores["knownmodules_name"] = knownmodules_name
-    settingscores["regnet_name"] = regnet_name
-    settingscores["runningtime"] = runinfo["runningtime"]
+    dataset = json.load(open("../" + setting["dataset_location"]))
 
-    scores[settingid] = settingscores
+    settingscores = []
 
-    if verbose:print("◼ " + str(settingid))
-    sys.stdout.flush()
+    for regnet_name in dataset["knownmodules"].keys():
+        for knownmodules_name in dataset["knownmodules"][regnet_name].keys():
+            baselinesoi = {
+                baseline_name:baseline.ix[(dataset["baselinename"], regnet_name, knownmodules_name)].to_dict()
+                for baseline_name, baseline in baselines.items()
+            }
+
+            knownmodules_location = dataset["knownmodules"][regnet_name][knownmodules_name]
+            knownmodules = Modules(json.load(open("../" + knownmodules_location)))
+
+            settingscores_goldstandard = modevalscorer(modules, knownmodules, baselinesoi)
+
+            settingscores_goldstandard["settingid"] = setting["settingid"]
+
+            settingscores_goldstandard["knownmodules_name"] = knownmodules_name
+            settingscores_goldstandard["regnet_name"] = regnet_name
+            settingscores_goldstandard["goldstandard"] = regnet_name + "#" + knownmodules_name
+
+            settingscores_goldstandard["runningtime"] = runinfo["runningtime"]
+
+            settingscores.append(settingscores_goldstandard)
+
+    scores[setting["settingid"]] = settingscores
 
 def modevalscorer(modules, knownmodules, baselines=None):
     allgenes = sorted(list({g for module in knownmodules for g in module}))
@@ -226,34 +223,22 @@ class ModevalCoverage:
         self.settings = settings
 
     def run(self, pool):
-        baseline_names = ["permuted", "sticky", "scalefree"]
-        baselines = {baseline_name:pd.read_table("../results/modeval_coverage/baselines_" + baseline_name + ".tsv", index_col=[0, 1]) for baseline_name in baseline_names}
-
         jobs = []
         manager = mp.Manager()
         scores = manager.dict()
 
         params_pool = []
 
-        i = 0
-
-        self.modulesets = [Modules(json.load(open("../" + setting["output_folder"] + "modules.json"))) for setting in self.settings]
-
         print("Evaluating a total of " + str(len(self.settings)) + " settings.")
 
-        for setting, modules in zip(self.settings, self.modulesets):
-            runinfo = json.load(open("../" + setting["output_folder"] + "runinfo.json"))
-
-            method = json.load(open("../" + setting["method_location"]))
-            dataset = json.load(open("../" + setting["dataset_location"]))
-
-            params_pool.append((i, modules, method, dataset, runinfo, {baseline_name:baseline.ix[dataset["datasetname"]] for baseline_name, baseline in baselines.items()}, scores))
-            i+=1
+        for setting in self.settings:
+            params_pool.append((setting, scores))
 
         pool.starmap(modeval_coverage_worker, params_pool)
 
-        self.scores = pd.DataFrame(list(scores.values()))
-        self.scores_full = list(scores.values())
+        scores = [scores_line for settingscores in list(scores.values()) for scores_line in settingscores]
+        self.scores = pd.DataFrame(scores)
+        self.scores_full = scores
 
         manager.shutdown()
 
@@ -272,17 +257,26 @@ class Modeval:
         self.settings = settings
 
     def save(self, name, full=True):
-        self.scores.to_csv("../results/modeval_coverage/" + name + ".tsv", sep="\t")
+        self.scores.to_csv("../results/{scoring_folder}/{settings_name}.tsv".format(scoring_folder=scoring_folder, name = name), sep="\t")
         if full:
-            json.dump(self.scores_full, open("../results/modeval_coverage/" + name + ".json", "w"), cls=JSONExtendedEncoder)
+            json.dump(self.scores_full, open("../results/{scoring_folder}/{settings_name}.json".format(scoring_folder=scoring_folder, name = name), "w"), cls=JSONExtendedEncoder)
 
     def load(self, name, full=False):
-        self.scores = pd.read_table("../results/modeval_coverage/" + name + ".tsv", index_col=0)
+        self.scores = pd.read_table("../results/{scoring_folder}/{settings_name}.tsv".format(scoring_folder=scoring_folder, name = name), index_col=0)
         if full:
-            self.scores_full = json.load(open("../results/modeval_coverage/" + name + ".json"))
+            self.scores_full = json.load(open("../results/{scoring_folder}/{settings_name}.json".format(scoring_folder=scoring_folder, name = name)))
 
-def modeval_coverage_worker(settingid, modules, method, dataset, runinfo, baselines, scores, verbose=False):
-    if verbose: print("▶ " + str(settingid))
+def modeval_coverage_worker(setting, scores, verbose=False):
+    dataset = json.load(open("../" + setting["dataset_location"]))
+
+    baseline_names = ["permuted", "sticky", "scalefree"]
+    baselines = {baseline_name:pd.read_table("../results/modeval_coverage/baselines_" + baseline_name + ".tsv", index_col=[0, 1]) for baseline_name in baseline_names}
+    baselines = {baseline_name:baseline.ix[dataset["datasetname"]] for baseline_name, baseline in baselines.items()}
+
+    runinfo = json.load(open("../" + setting["output_folder"] + "runinfo.json"))
+    modules = Modules(json.load(open("../" + setting["output_folder"] + "modules.json")))
+
+    if verbose: print("▶ " + str(setting["settingid"]))
 
     subscores = []
     for bound_name, bound_location in dataset["binding"].items():
@@ -298,14 +292,13 @@ def modeval_coverage_worker(settingid, modules, method, dataset, runinfo, baseli
     for baseline_name, baseline in baselines.items():
         settingscores["aucodds_" + baseline_name] = settingscores["aucodds"]/baseline["aucodds"].mean()
 
-    settingscores.update(method["params"])
-    settingscores.update(dataset["params"])
-    settingscores["binding"] = "regcircuit"
+    settingscores["settingid"] = setting["settingid"]
+    settingscores["goldstandard"] = "regcircuit"
     settingscores["runningtime"] = runinfo["runningtime"]
 
-    scores[settingid] = settingscores
+    scores[setting["settingid"]] = [settingscores]
 
-    if verbose: print("◼ " + str(settingid))
+    if verbose: print("◼ " + str(setting["settingid"]))
 
 def modbindevalscorer(modules, binding):
     modules = modules.filter_size(5)
@@ -377,109 +370,115 @@ class ModevalFunctional:
 
         params_pool = []
 
-        i = 0
-
-        self.modulesets = [Modules(json.load(open("../" + setting["output_folder"] + "modules.json"))) for setting in self.settings]
-
         print("Evaluating a total of " + str(len(self.settings)) + " settings.")
 
-        if os.path.exists(self.scoring_folder + self.settings_name):
-            shutil.rmtree(self.scoring_folder + self.settings_name)
-        os.mkdir(self.scoring_folder + self.settings_name)
-
-        if gset_names is None:
-            list(dataset["gsets"].keys())
-
-        for setting, modules in zip(self.settings, self.modulesets):
-            runinfo = json.load(open("../" + setting["output_folder"] + "runinfo.json"))
-
-            method = json.load(open("../" + setting["method_location"]))
-            dataset = json.load(open("../" + setting["dataset_location"]))
-
-            for gsets_name in gset_names:
-                gsets_location = dataset["gsets"][gsets_name]
-                params_pool.append((i, self.scoring_folder + self.settings_name + "/", modules, gsets_name, gsets_location, method, dataset, runinfo, None, scores))
-
-                i+=1
+        for setting in self.settings:
+            params_pool.append((setting, scores))
 
         pool.starmap(modenrichevalworker, params_pool)
 
-        try:
-            self.load()
-            oldscores = self.scores
-        except:
-            print("no previous found!")
-
-        self.scores = pd.DataFrame(list(scores.values()))
-        self.scores["gsetsource"] = self.scores["binding"]
-
-        if "oldscores" in locals().keys():
-            self.scores = pd.concat([self.scores, oldscores[[col for col in oldscores if col not in self.scores.columns]]], axis=1)
-        self.scores_full = list(scores.values())
+        scores = [scores_line for settingscores in list(scores.values()) for scores_line in settingscores]
+        self.scores = pd.DataFrame(scores)
+        self.scores_full = scores
 
         manager.shutdown()
 
-    def save(self, settings_name=None):
+    def save(self, settings_name):
         self.scores.to_csv(self.scoring_folder + settings_name + ".tsv", sep="\t")
         if hasattr(self, 'scores_full'):
             json.dump(self.scores_full, open(self.scoring_folder + settings_name + ".json", "w"), cls=JSONExtendedEncoder)
 
-    def load(self):
+    def load(self, settings_name):
         self.scores = pd.read_table(self.scoring_folder + settings_name + ".tsv", index_col=0)
 
-def modenrichevalworker(settingid, scoring_folder, modules, bound_name, bound_location, method, dataset, runinfo, baseline, scores):
-    print("▶ " + str(settingid))
-    if bound_location.endswith(".pkl"):
-        bound = pd.read_pickle("../" + bound_location)
-        connectivity = pd.read_pickle("../" + bound_location[:-4] + "_connectivity.pkl")
-    else:
-        bound = pd.read_table("../" + bound_location, index_col=0, header=[0,1])
+def modenrichevalworker(setting, scores):
+    dataset = json.load(open("../" + setting["dataset_location"]))
 
-    scores_real = modenrichevalscorer(modules, bound, connectivity, baseline, calculate_aucodds=False)
+    modules = Modules(json.load(open("../" + setting["output_folder"] + "modules.json")))
 
-    #bound_random = bound.copy()
-    #bound_random.index = np.random.permutation(bound_random.index)
+    settingscores = []
+    for gsets_name in dataset["gsets"].keys():
+        gsets_location = dataset["gsets"][gsets_name]
+        membership = pd.read_pickle("../" + gsets_location)
+        connectivity = pd.read_pickle("../" + gsets_location[:-4] + "_connectivity.pkl")
 
-    settingscores = scores_real
+        settingscores_gsets = modenrichevalscorer(modules, membership, connectivity)
 
-    settingscores.update(method["params"])
-    settingscores.update(dataset["params"])
-    settingscores["binding"] = bound_name
-    settingscores["runningtime"] = runinfo["runningtime"]
+        settingscores.extend([{"settingid":setting["settingid"], "scorename":scorename + "#" + gsets_name, "score":score} for scorename, score in settingscores_gsets.items()])
 
-    #pvals.to_pickle(scoring_folder + str(settingid) + "pvals.pkl")
-    #odds.to_pickle(scoring_folder + str(settingid) + "odds.pkl")
-    #qvals.to_pickle(scoring_folder + str(settingid) + "qvals.pkl")
+    scores[setting["settingid"]] = settingscores
 
-    scores[settingid] = settingscores
+def cal_bhi(modules, connectivity):
+    bhi = 0
+    for module in modules:
+        if len(module) > 1:
+            bhi += 1/(len(module) * (len(module) - 1)) * connectivity.ix[module, module].sum().sum()
+    bhi = 1/len(modules) * bhi
 
-    print("◼ " + str(settingid))
+    return bhi
 
 import fisher
 from scipy.stats import chi2_contingency
 
+def test_enrichment(modules, membership):
+    if len(modules) == 0:
+        odds = pd.DataFrame()
+        pvals = pd.DataFrame()
+        qvals = pd.DataFrame()
+    else:
+        modmem = modules.cal_membership(G=membership.index)
+
+        modsizes = modmem.sum()
+        binsizes = membership.sum()
+
+        tps = modmem.T.dot(membership.astype(np.int))
+        fps = binsizes - tps
+        fns = (modsizes - tps.T).T
+        tns = membership.shape[0] - tps - fps - fns
+
+        odds = ((tps * tns)/(fps*fns))
+
+        values = np.array([odds.as_matrix().flatten(),  tps.as_matrix().flatten(), fps.as_matrix().flatten(), fns.as_matrix().flatten(), tns.as_matrix().flatten()])
+
+        pvals = np.apply_along_axis(filterfisher, 0, values)
+        qvals = []
+        for pvalrow in pvals.reshape(tps.shape):
+            _,qvalrow,_,_ = np.array(multipletests(pvalrow))
+            qvals.append(qvalrow)
+        qvals = pd.DataFrame(qvals, index=tps.index, columns=tps.columns)
+        pvals = pd.DataFrame(pvals.reshape(tps.shape), index=tps.index, columns=tps.columns)
+    return pvals, qvals, odds
+
 def filterfisher(x):
     return fisher.pvalue(x[1], x[2], x[3], x[4]).right_tail
 
-try:
-    from matplotlib.pyplot import *
-except:
-    print("no matplotlib")
-
-def cal_aucodds(odds):
+def cal_aucodds(odds, cutoffs=np.linspace(0, 3, 100)):
     maxodds = odds.max(1)
-
     if len(maxodds) == 0:
         return 0
 
-    cutoffs = np.linspace(0, 3, 100)
-
-    #plot(cutoffs, [(np.log10(maxodds) >= cutoff).sum()/len(maxodds) for cutoff in cutoffs])
-    #ylim(0,1)
-
     stillenriched = [(np.log10(maxodds) >= cutoff).sum()/len(maxodds) for cutoff in cutoffs]
-
     return np.trapz(stillenriched, cutoffs) / (cutoffs[-1] - cutoffs[0])
+
+def cal_faucodds(odds, cutoffs=np.linspace(0, 3, 100)):
+    aucodds1 = cal_aucodds(odds, cutoffs)
+    aucodds2 = cal_aucodds(odds.T, cutoffs)
+
+    return 2/(1/aucodds1 + 1/aucodds2)
+
+def modenrichevalscorer(modules, membership, connectivity):
+    modules = modules.filter_size(5)
+
+    pvals, qvals, odds = test_enrichment(modules, membership)
+    filteredodds = odds.copy()
+    filteredodds.values[(qvals > 0.1).as_matrix().astype(np.bool)] = 0
+
+    scores = {
+        "bhi":cal_bhi(modules, connectivity),
+        "faucodds":cal_faucodds(filteredodds)
+    }
+
+    return scores
 
 def modenrichevalscorer(modules, binding, connectivity, baseline=None, calculate_aucodds=True):
     modules = modules.filter_size(5)
