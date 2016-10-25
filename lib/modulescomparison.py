@@ -480,131 +480,131 @@ def modenrichevalscorer(modules, membership, connectivity):
 
     return scores
 
-def modenrichevalscorer(modules, binding, connectivity, baseline=None, calculate_aucodds=True):
-    modules = modules.filter_size(5)
-    if len(modules) == 0:
-        aucqval = 0
-        aucodds=0
-        aucodds1 = 0
-        aucodds2 = 0
+# def modenrichevalscorer(modules, binding, connectivity, baseline=None, calculate_aucodds=True):
+#     modules = modules.filter_size(5)
+#     if len(modules) == 0:
+#         aucqval = 0
+#         aucodds=0
+#         aucodds1 = 0
+#         aucodds2 = 0
 
-        odds = pd.DataFrame()
-        pvals = pd.DataFrame()
-        qvals = pd.DataFrame()
+#         odds = pd.DataFrame()
+#         pvals = pd.DataFrame()
+#         qvals = pd.DataFrame()
 
-        bhi = 0
-    else:
-        ## BHI
-        #binding_filtered = binding.ix[:,binding.sum() < len(binding.index)*0.2]
-        #connectivity = np.dot(binding_filtered, binding_filtered.T)
-        #np.fill_diagonal(connectivity, False)
-        #connectivity = pd.DataFrame(connectivity, index=binding_filtered.index, columns=binding_filtered.index)
+#         bhi = 0
+#     else:
+#         ## BHI
+#         #binding_filtered = binding.ix[:,binding.sum() < len(binding.index)*0.2]
+#         #connectivity = np.dot(binding_filtered, binding_filtered.T)
+#         #np.fill_diagonal(connectivity, False)
+#         #connectivity = pd.DataFrame(connectivity, index=binding_filtered.index, columns=binding_filtered.index)
 
-        start = time.time()
+#         start = time.time()
 
-        bhi = 0
-        for module in modules:
-            if len(module) > 1:
-                bhi += 1/(len(module) * (len(module) - 1)) * connectivity.ix[module, module].sum().sum()
-        bhi = 1/len(modules) * bhi
+#         bhi = 0
+#         for module in modules:
+#             if len(module) > 1:
+#                 bhi += 1/(len(module) * (len(module) - 1)) * connectivity.ix[module, module].sum().sum()
+#         bhi = 1/len(modules) * bhi
 
-        end = time.time()
-        print(">>" + str(end - start))
+#         end = time.time()
+#         print(">>" + str(end - start))
 
-        ## AUCODDS
-        if calculate_aucodds:
-            modmem = modules.cal_membership(G=binding.index)
-            binmem = binding
+#         ## AUCODDS
+#         if calculate_aucodds:
+#             modmem = modules.cal_membership(G=binding.index)
+#             binmem = binding
 
-            modsizes = modmem.sum()
-            binsizes = binmem.sum()
+#             modsizes = modmem.sum()
+#             binsizes = binmem.sum()
 
-            tps = modmem.T.dot(binmem.astype(np.int))
-            fps = binsizes - tps
-            fns = (modsizes - tps.T).T
-            tns = binmem.shape[0] - tps - fps - fns
+#             tps = modmem.T.dot(binmem.astype(np.int))
+#             fps = binsizes - tps
+#             fns = (modsizes - tps.T).T
+#             tns = binmem.shape[0] - tps - fps - fns
 
-            odds = ((tps * tns)/(fps*fns))
+#             odds = ((tps * tns)/(fps*fns))
 
-            values = np.array([odds.as_matrix().flatten(),  tps.as_matrix().flatten(), fps.as_matrix().flatten(), fns.as_matrix().flatten(), tns.as_matrix().flatten()])
+#             values = np.array([odds.as_matrix().flatten(),  tps.as_matrix().flatten(), fps.as_matrix().flatten(), fns.as_matrix().flatten(), tns.as_matrix().flatten()])
 
-            pvals = np.apply_along_axis(filterfisher, 0, values)
-            qvals = []
-            for pvalrow in pvals.reshape(tps.shape):
-                _,qvalrow,_,_ = np.array(multipletests(pvalrow))
-                qvals.append(qvalrow)
-            #qvals = pvals.reshape(odds.shape)
-            qvals = pd.DataFrame(qvals, index=tps.index, columns=tps.columns)
-            pvals = pd.DataFrame(pvals.reshape(tps.shape), index=tps.index, columns=tps.columns)
-            if binding.columns.nlevels > 1:
-                pvals = pvals.T.groupby(level=0).min()
-                qvals = qvals.T.groupby(level=0).min() # group by regulator
-                odds = odds.T.groupby(level=0).max() # group by regulator
-            else:
-                pvals = pvals.T
-                qvals = qvals.T
-                odds = odds.T
+#             pvals = np.apply_along_axis(filterfisher, 0, values)
+#             qvals = []
+#             for pvalrow in pvals.reshape(tps.shape):
+#                 _,qvalrow,_,_ = np.array(multipletests(pvalrow))
+#                 qvals.append(qvalrow)
+#             #qvals = pvals.reshape(odds.shape)
+#             qvals = pd.DataFrame(qvals, index=tps.index, columns=tps.columns)
+#             pvals = pd.DataFrame(pvals.reshape(tps.shape), index=tps.index, columns=tps.columns)
+#             if binding.columns.nlevels > 1:
+#                 pvals = pvals.T.groupby(level=0).min()
+#                 qvals = qvals.T.groupby(level=0).min() # group by regulator
+#                 odds = odds.T.groupby(level=0).max() # group by regulator
+#             else:
+#                 pvals = pvals.T
+#                 qvals = qvals.T
+#                 odds = odds.T
 
-            ## auc qvals
-            cutoffs = 10**(-np.arange(0, 10.0000001, 0.05))
-            minqvals = qvals.min(1)
+#             ## auc qvals
+#             cutoffs = 10**(-np.arange(0, 10.0000001, 0.05))
+#             minqvals = qvals.min(1)
         
-            #plot(np.log10(cutoffs), [(minqvals <= cutoff).sum()/len(minqvals) for cutoff in cutoffs])
+#             #plot(np.log10(cutoffs), [(minqvals <= cutoff).sum()/len(minqvals) for cutoff in cutoffs])
 
-            if len(minqvals) > 0:
-                aucqval = np.trapz([(minqvals <= cutoff).sum()/len(minqvals) for cutoff in cutoffs])/(len(cutoffs)-1)
-            else:
-                aucqval = 0
+#             if len(minqvals) > 0:
+#                 aucqval = np.trapz([(minqvals <= cutoff).sum()/len(minqvals) for cutoff in cutoffs])/(len(cutoffs)-1)
+#             else:
+#                 aucqval = 0
 
-            ## auc odds
-            newodds = odds.copy()
-            newodds.values[(qvals > 0.1).as_matrix().astype(np.bool)] = 0
+#             ## auc odds
+#             newodds = odds.copy()
+#             newodds.values[(qvals > 0.1).as_matrix().astype(np.bool)] = 0
 
-            aucodds, aucodds1, aucodds2 = cal_faucodds(newodds)
+#             aucodds, aucodds1, aucodds2 = cal_faucodds(newodds)
 
-    scores = {}
+#     scores = {}
 
-    if calculate_aucodds:
-        scores["aucqval"] = aucqval
+#     if calculate_aucodds:
+#         scores["aucqval"] = aucqval
 
-        scores["aucodds"] = aucodds
-        scores["aucodds1"] = aucodds1
-        scores["aucodds2"] = aucodds2
+#         scores["aucodds"] = aucodds
+#         scores["aucodds1"] = aucodds1
+#         scores["aucodds2"] = aucodds2
 
-        scores["percenriched"] = (qvals.min(1) < 0.05).sum()/binding.shape[1]
+#         scores["percenriched"] = (qvals.min(1) < 0.05).sum()/binding.shape[1]
 
-        scores["percenriched_modules"] = (qvals.min(0) < 0.05).sum()/len(modules) if len(modules) > 0 else 0
-        scores["percenriched_gsets"] = (qvals.min(1) < 0.05).sum()/binding.shape[1]
+#         scores["percenriched_modules"] = (qvals.min(0) < 0.05).sum()/len(modules) if len(modules) > 0 else 0
+#         scores["percenriched_gsets"] = (qvals.min(1) < 0.05).sum()/binding.shape[1]
 
-        if aucqval > 0 and scores["aucodds"] > 0:
-            scores["Fauc"] = 2/(1/scores["aucodds"] + 1/scores["aucqval"])
-        else:
-            scores["Fauc"] = 0
+#         if aucqval > 0 and scores["aucodds"] > 0:
+#             scores["Fauc"] = 2/(1/scores["aucodds"] + 1/scores["aucqval"])
+#         else:
+#             scores["Fauc"] = 0
 
-    scores["bhi"] = bhi
+#     scores["bhi"] = bhi
 
-    return scores
+#     return scores
 
-def cal_faucodds(odds):
-    ## TODO: cutoffs = all odds ratio's (more exact and faster)
-    ## TODO: odds and qvals min calculation for at the same context (eg. use the minimal qval to get the odds ratio for the regulator instead of doing it separatedly)
-    maxodds = odds.max(1)
+# def cal_faucodds(odds):
+#     ## TODO: cutoffs = all odds ratio's (more exact and faster)
+#     ## TODO: odds and qvals min calculation for at the same context (eg. use the minimal qval to get the odds ratio for the regulator instead of doing it separatedly)
+#     maxodds = odds.max(1)
 
-    if len(maxodds) == 0:
-        return 0
+#     if len(maxodds) == 0:
+#         return 0
 
-    cutoffs = np.linspace(0, 3, 100)
+#     cutoffs = np.linspace(0, 3, 100)
 
-    stillenriched = [(np.log10(maxodds) >= cutoff).sum()/len(maxodds) for cutoff in cutoffs]
-    aucodds = np.trapz(stillenriched, cutoffs) / (cutoffs[-1] - cutoffs[0])
+#     stillenriched = [(np.log10(maxodds) >= cutoff).sum()/len(maxodds) for cutoff in cutoffs]
+#     aucodds = np.trapz(stillenriched, cutoffs) / (cutoffs[-1] - cutoffs[0])
     
-    maxodds = odds.max(0)
+#     maxodds = odds.max(0)
 
-    cutoffs = np.linspace(0, 3, 100)
+#     cutoffs = np.linspace(0, 3, 100)
 
-    stillenriched = [(np.log10(maxodds) >= cutoff).sum()/len(maxodds) for cutoff in cutoffs]
-    aucodds2 = np.trapz(stillenriched, cutoffs) / (cutoffs[-1] - cutoffs[0])
-    return 2/(1/aucodds + 1/aucodds2), aucodds, aucodds2
+#     stillenriched = [(np.log10(maxodds) >= cutoff).sum()/len(maxodds) for cutoff in cutoffs]
+#     aucodds2 = np.trapz(stillenriched, cutoffs) / (cutoffs[-1] - cutoffs[0])
+#     return 2/(1/aucodds + 1/aucodds2), aucodds, aucodds2
 
 def fmeasure_wiwie(c, k):
     if (len(c) == 0) or (len(k) == 0):
