@@ -247,7 +247,7 @@ def modeval_coverage_worker(setting, scores, verbose=False):
 
     baseline_names = ["permuted", "sticky", "scalefree"]
     baselines = {baseline_name:pd.read_table("../results/modeval_coverage/baselines_" + baseline_name + ".tsv", index_col=[0, 1]) for baseline_name in baseline_names}
-    baselines = {baseline_name:baseline.ix[dataset["datasetname"]] for baseline_name, baseline in baselines.items()}
+    baselines = {baseline_name:baseline.ix[dataset["baselinename"]] for baseline_name, baseline in baselines.items()}
 
     runinfo = json.load(open("../" + setting["output_folder"] + "runinfo.json"))
     modules = Modules(json.load(open("../" + setting["output_folder"] + "modules.json")))
