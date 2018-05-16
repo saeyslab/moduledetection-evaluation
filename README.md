@@ -1,6 +1,6 @@
 # Dependencies
 
-Data can be downloaded from http://bioit.irc.ugent.be/suppl-data/2016/saelens-module-evaluation.zip Unzip the files within the data/ folder
+Data can be downloaded from zenodo: https://zenodo.org/record/1157938 These files should be put into the data folder
 
 Several scientific python packages are required to run the code. The easiest way to do this is to use the python 3.X Anaconda distribution (https://www.continuum.io/downloads). Alternatively you can install the manually using pip:
 * Jupyter
