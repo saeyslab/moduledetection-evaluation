@@ -1,0 +1,7 @@
+*.so
+*.pyc
+*.c
+*.cpython*
+*.ipynb_checkpoints/
+tmp/
+.Rhistory

@@ -1,0 +1,1 @@
+{"method": "agglom", "simdist_function": "pearson_correlation", "k": 250.0, "linkage": "complete"}

@@ -8,7 +8,6 @@ import shutil
 from util import JSONExtendedEncoder
 
 from clustering import *
-from biclustering import *
 
 import pandas as pd
 import numpy as np
