@@ -12,6 +12,11 @@ from simdist import simdist
 from util import TemporaryDirectory
 
 try:
+    import nimfa
+except ImportError:
+    "No nimfa"
+
+try:
     import rpy2.robjects as ro
     import rpy2.robjects.numpy2ri
     import rpy2.robjects.pandas2ri
