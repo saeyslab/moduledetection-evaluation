@@ -1,0 +1,11 @@
+*.so
+*.pyc
+*.c
+*.cpython*
+*.ipynb_checkpoints/
+tmp/
+.Rhistory
+results/
+conf/
+*.o
+data

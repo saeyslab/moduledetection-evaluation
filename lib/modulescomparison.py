@@ -49,7 +49,7 @@ class ModulesComparison():
         self.membershipsB = self.modulesB.cal_membership(self.G).astype(np.uint8)
 
         if len(self.modulesB) > 0 and len(self.modulesA) > 0:
-            self.jaccards = np.nan_to_num(jaccard.cal_similaritymatrix_jaccard(self.membershipsA.T.as_matrix(), self.membershipsB.T.as_matrix()))
+            self.jaccards = np.nan_to_num(jaccard.cal_similaritymatrix_jaccard(self.membershipsA.T.values, self.membershipsB.T.values))
         else:
             self.jaccards = np.zeros((1,1))
 
@@ -76,7 +76,7 @@ class ModulesComparison():
             if (self.membershipsA.shape[1] == 0) or (self.membershipsB.shape[1] == 0):
                 scores["recalls"] = scores["precisions"] = np.zeros(1)
             else:
-                scores["recalls"], scores["precisions"] = ebcubed.cal_ebcubed(self.membershipsA.as_matrix(), self.membershipsB.as_matrix(), self.jaccards.T.astype(np.float64))
+                scores["recalls"], scores["precisions"] = ebcubed.cal_ebcubed(self.membershipsA.values, self.membershipsB.values, self.jaccards.T.astype(np.float64))
             scores["recall"] = scores["recalls"].mean()
             scores["precision"] = scores["precisions"].mean()
             scores["F1rp"] = harmonic_mean([scores["recall"], scores["precision"]])
@@ -298,7 +298,7 @@ def modbindevalscorer(modules, binding):
 
         odds = ((tps * tns)/(fps*fns))
 
-        values = np.array([odds.as_matrix().flatten(),  tps.as_matrix().flatten(), fps.as_matrix().flatten(), fns.as_matrix().flatten(), tns.as_matrix().flatten()])
+        values = np.array([odds.values.flatten(),  tps.values.flatten(), fps.values.flatten(), fns.values.flatten(), tns.values.flatten()])
 
         pvals = np.apply_along_axis(filterfisher, 0, values)
         qvals = []
@@ -319,7 +319,7 @@ def modbindevalscorer(modules, binding):
         ## auc odds
 
         odds_filtered = odds.copy()
-        odds_filtered.values[(qvals > 0.05).as_matrix().astype(np.bool)] = 0
+        odds_filtered.values[(qvals > 0.05).values.astype(np.bool)] = 0
         odds_max = odds_filtered.max(1)
 
         if len(odds_max) == 0:
@@ -414,7 +414,7 @@ def test_enrichment(modules, membership):
 
         odds = ((tps * tns)/(fps*fns))
 
-        values = np.array([odds.as_matrix().flatten(),  tps.as_matrix().flatten(), fps.as_matrix().flatten(), fns.as_matrix().flatten(), tns.as_matrix().flatten()])
+        values = np.array([odds.values.flatten(),  tps.values.flatten(), fps.values.flatten(), fns.values.flatten(), tns.values.flatten()])
 
         pvals = np.apply_along_axis(filterfisher, 0, values)
         qvals = []
@@ -447,7 +447,7 @@ def modenrichevalscorer(modules, membership, connectivity):
 
     pvals, qvals, odds = test_enrichment(modules, membership)
     filteredodds = odds.copy()
-    filteredodds.values[(qvals > 0.1).as_matrix().astype(np.bool)] = 0
+    filteredodds.values[(qvals > 0.1).values.astype(np.bool)] = 0
 
     scores = {
         "bhi":cal_bhi(modules, connectivity),
