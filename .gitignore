@@ -6,6 +6,5 @@
 tmp/
 .Rhistory
 results/
-conf/
 *.o
 data
