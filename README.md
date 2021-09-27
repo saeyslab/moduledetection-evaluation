@@ -8,7 +8,7 @@ Several scientific python packages are required to run the code. The easiest way
 * Pandas
 * numpy
 * statsmodels
-* scitkit-learn
+* scikit-learn
 
 The Cython code for the evaluation metrics should also be compiled. For this, go to /lib and run `python3 setup.py build_ext --inplace`
 
