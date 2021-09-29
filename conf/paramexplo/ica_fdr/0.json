@@ -1,0 +1,1 @@
+{"params": {"method": "ica_fdr", "k": 50.0, "qvalcutoff": 0.1}, "location": "conf/paramexplo/ica_fdr/0.json", "seed": 0}

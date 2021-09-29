@@ -1,1 +1,68 @@
-{"location": "conf/datasets/human_seek_gpl5175.json", "regnets": ["human_regcircuit_001_joined", "human_regcircuit_002_joined", "human_regcircuit_005_joined", "human_regcircuit_01_joined", "human_regcircuit_02_joined", "human_regcircuit_05_joined", "human_regcircuit_1_joined", "human_regcircuit_2_joined", "human_regcircuit_5_joined"], "knownmodules": {"human_regcircuit_01_joined": {"minimal": "data/expression/human_seek_gpl5175/knownmodules/human_regcircuit_01_joined/minimal.json"}, "human_regcircuit_5_joined": {"minimal": "data/expression/human_seek_gpl5175/knownmodules/human_regcircuit_5_joined/minimal.json"}, "human_regcircuit_002_joined": {"minimal": "data/expression/human_seek_gpl5175/knownmodules/human_regcircuit_002_joined/minimal.json"}, "human_regcircuit_005_joined": {"minimal": "data/expression/human_seek_gpl5175/knownmodules/human_regcircuit_005_joined/minimal.json"}, "human_regcircuit_1_joined": {"minimal": "data/expression/human_seek_gpl5175/knownmodules/human_regcircuit_1_joined/minimal.json"}, "human_regcircuit_001_joined": {"minimal": "data/expression/human_seek_gpl5175/knownmodules/human_regcircuit_001_joined/minimal.json"}, "human_regcircuit_05_joined": {"minimal": "data/expression/human_seek_gpl5175/knownmodules/human_regcircuit_05_joined/minimal.json"}, "human_regcircuit_02_joined": {"minimal": "data/expression/human_seek_gpl5175/knownmodules/human_regcircuit_02_joined/minimal.json"}, "human_regcircuit_2_joined": {"minimal": "data/expression/human_seek_gpl5175/knownmodules/human_regcircuit_2_joined/minimal.json"}}, "gsets": {"kegg": "data/expression/human_seek_gpl5175/gsets/kegg.pkl", "go": "data/expression/human_seek_gpl5175/gsets/go.pkl", "reactome": "data/expression/human_seek_gpl5175/gsets/reactome.pkl"}, "regulators": "data/expression/human_seek_gpl5175/regulators.json", "binding": {"regcircuit_001": "data/expression/human_seek_gpl5175/binding/regcircuit_001.pkl", "regcircuit_005": "data/expression/human_seek_gpl5175/binding/regcircuit_005.pkl", "regcircuit_1": "data/expression/human_seek_gpl5175/binding/regcircuit_1.pkl", "regcircuit_01": "data/expression/human_seek_gpl5175/binding/regcircuit_01.pkl", "regcircuit_05": "data/expression/human_seek_gpl5175/binding/regcircuit_05.pkl", "regcircuit_002": "data/expression/human_seek_gpl5175/binding/regcircuit_002.pkl", "regcircuit_02": "data/expression/human_seek_gpl5175/binding/regcircuit_02.pkl", "regcircuit_5": "data/expression/human_seek_gpl5175/binding/regcircuit_5.pkl", "regcircuit_2": "data/expression/human_seek_gpl5175/binding/regcircuit_2.pkl"}, "datasetname": "human_seek_gpl5175", "simdistfolder": "data/expression/human_seek_gpl5175/simdist/", "params": {"datasetname": "human_seek_gpl5175", "organism": "human"}, "baselinename": "human_seek_gpl5175", "expression": "data/expression/human_seek_gpl5175/E.tsv"}
+{
+    "location": "conf/datasets/human_seek_gpl5175.json",
+    "regnets": [
+        "human_regcircuit_001",
+        "human_regcircuit_002",
+        "human_regcircuit_005",
+        "human_regcircuit_01",
+        "human_regcircuit_02",
+        "human_regcircuit_05",
+        "human_regcircuit_1",
+        "human_regcircuit_2",
+        "human_regcircuit_5"
+    ],
+    "knownmodules": {
+        "human_regcircuit_01": {
+            "minimal": "data/human_seek_gpl5175/knownmodules/human_regcircuit_01/minimal.json"
+        },
+        "human_regcircuit_5": {
+            "minimal": "data/human_seek_gpl5175/knownmodules/human_regcircuit_5/minimal.json"
+        },
+        "human_regcircuit_002": {
+            "minimal": "data/human_seek_gpl5175/knownmodules/human_regcircuit_002/minimal.json"
+        },
+        "human_regcircuit_005": {
+            "minimal": "data/human_seek_gpl5175/knownmodules/human_regcircuit_005/minimal.json"
+        },
+        "human_regcircuit_1": {
+            "minimal": "data/human_seek_gpl5175/knownmodules/human_regcircuit_1/minimal.json"
+        },
+        "human_regcircuit_001": {
+            "minimal": "data/human_seek_gpl5175/knownmodules/human_regcircuit_001/minimal.json"
+        },
+        "human_regcircuit_05": {
+            "minimal": "data/human_seek_gpl5175/knownmodules/human_regcircuit_05/minimal.json"
+        },
+        "human_regcircuit_02": {
+            "minimal": "data/human_seek_gpl5175/knownmodules/human_regcircuit_02/minimal.json"
+        },
+        "human_regcircuit_2": {
+            "minimal": "data/human_seek_gpl5175/knownmodules/human_regcircuit_2/minimal.json"
+        }
+    },
+    "gsets": {
+        "kegg": "data/human_seek_gpl5175/gsets/kegg.pkl",
+        "go": "data/human_seek_gpl5175/gsets/go.pkl",
+        "reactome": "data/human_seek_gpl5175/gsets/reactome.pkl"
+    },
+    "regulators": "data/human_seek_gpl5175/regulators.json",
+    "binding": {
+        "regcircuit_001": "data/human_seek_gpl5175/binding/regcircuit_001.pkl",
+        "regcircuit_005": "data/human_seek_gpl5175/binding/regcircuit_005.pkl",
+        "regcircuit_1": "data/human_seek_gpl5175/binding/regcircuit_1.pkl",
+        "regcircuit_01": "data/human_seek_gpl5175/binding/regcircuit_01.pkl",
+        "regcircuit_05": "data/human_seek_gpl5175/binding/regcircuit_05.pkl",
+        "regcircuit_002": "data/human_seek_gpl5175/binding/regcircuit_002.pkl",
+        "regcircuit_02": "data/human_seek_gpl5175/binding/regcircuit_02.pkl",
+        "regcircuit_5": "data/human_seek_gpl5175/binding/regcircuit_5.pkl",
+        "regcircuit_2": "data/human_seek_gpl5175/binding/regcircuit_2.pkl"
+    },
+    "datasetname": "human_seek_gpl5175",
+    "simdistfolder": "data/human_seek_gpl5175/simdist/",
+    "params": {
+        "datasetname": "human_seek_gpl5175",
+        "organism": "human"
+    },
+    "baselinename": "human_seek_gpl5175",
+    "expression": "data/human_seek_gpl5175/E.tsv"
+}

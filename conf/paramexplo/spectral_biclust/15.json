@@ -1,0 +1,1 @@
+{"params": {"method": "spectral_biclust", "n": 20, "ngenes": 500}, "location": "conf/paramexplo/spectral_biclust/15.json", "seed": 0}

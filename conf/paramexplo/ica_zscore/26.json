@@ -1,0 +1,1 @@
+{"params": {"method": "ica_zscore", "k": 100.0, "stdcutoff": 6.5}, "location": "conf/paramexplo/ica_zscore/26.json", "seed": 0}

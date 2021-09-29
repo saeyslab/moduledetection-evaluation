@@ -213,7 +213,7 @@ blueprints = {
     },
     "dynparams": {
         "k":np.arange(50, 600.01, 50),
-        "qvalcutoff":10**(-np.arange(1, 15, dtype=np.float))
+        "qvalcutoff":10**(-np.arange(1, 15, dtype=float))
     },
     "type":"moduledetection"
 },
@@ -223,7 +223,7 @@ blueprints = {
     },
     "dynparams": {
         "k":np.arange(50, 600.01, 50),
-        "qvalcutoff":10**(-np.arange(1, 15, dtype=np.float))
+        "qvalcutoff":10**(-np.arange(1, 15, dtype=float))
     },
     "type":"moduledetection"
 },
@@ -252,7 +252,7 @@ blueprints = {
     },
     "dynparams": {
         "k":np.arange(50, 600.01, 50),
-        "qvalcutoff":10**(-np.arange(1, 15, dtype=np.float))
+        "qvalcutoff":10**(-np.arange(1, 15, dtype=float))
     },
     "type":"moduledetection"
 },
@@ -262,7 +262,7 @@ blueprints = {
     },
     "dynparams": {
         "k":np.arange(25, 300.01, 25),
-        "qvalcutoff":10**(-np.arange(1, 15, dtype=np.float))
+        "qvalcutoff":10**(-np.arange(1, 15, dtype=float))
     },
     "type":"moduledetection"
 },
@@ -536,9 +536,9 @@ methodparamsoi = {
     "graphclust_tigress":["method", "cutoff", "maxoverlap"],
     "graphclust_correlation":["method", "cutoff", "maxoverlap"],
 
-    "baseline_permuted":[],
-    "baseline_sticky":[],
-    "baseline_scalefree":[],
+    "baseline_permuted":["knownmodules"],
+    "baseline_sticky":["knownmodules"],
+    "baseline_scalefree":["knownmodules"],
 
     "dummy":["n"]
 }
