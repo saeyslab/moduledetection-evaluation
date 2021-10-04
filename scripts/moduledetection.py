@@ -46,7 +46,7 @@ if len(sys.argv) > 5:
 starttime = time.time() - originaltime
 
 try:
-	modules = locals()[method["params"]["method"]](E, simdistfolder=dataset["simdistfolder"],  **method["params"])
+	modules = locals()[method["params"]["method"]](E, **method["params"])
 except BaseException as e:
 	print("Error during clustering: ")
 	print(e)

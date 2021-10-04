@@ -27,7 +27,7 @@ knownmodules = json.load(open(dataset["knownmodules"][regnet_name][knownmodules_
 starttime = time.time()
 
 try:
-	modules = locals()[method["params"]["method"]](knownmodules, simdistfolder=dataset["simdistfolder"],  **method["params"])
+	modules = locals()[method["params"]["method"]](knownmodules, **method["params"])
 except BaseException as e:
 	print("Error during clustering: ")
 	print(e)
