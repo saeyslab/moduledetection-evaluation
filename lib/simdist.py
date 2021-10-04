@@ -21,7 +21,7 @@ def cal_triangular(E, func):
     """
     Calculates a given function for every gene pair in E
     """
-    Emat = E.T.as_matrix()
+    Emat = E.T.values
     correlations = np.identity(Emat.shape[0])
     todo = Emat.shape[0] * Emat.shape[0] / 2 - Emat.shape[0]
     for i, x in enumerate(Emat):

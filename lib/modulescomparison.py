@@ -118,8 +118,9 @@ class ModulesComparison():
 
 import multiprocessing as mp
 class ModevalKnownmodules:
-    def __init__(self, settings):
+    def __init__(self, settings, baseline = False):
         self.settings = settings
+        self.baseline = baseline
 
     def run(self, pool):
         jobs = []
@@ -129,7 +130,7 @@ class ModevalKnownmodules:
         params_pool = []
 
         for setting in self.settings:
-            params_pool.append((setting, scores))
+            params_pool.append((setting, scores, self.baseline))
 
         self.params_pool = params_pool
 
@@ -141,7 +142,10 @@ class ModevalKnownmodules:
         self.scores_full = scores
 
     def save(self, name, full=True):
-        self.scores.to_csv("../results/modeval_knownmodules/" + name + ".tsv", sep="\t")
+        file = "../results/modeval_knownmodules/"+ name+ ".tsv"
+        if not os.path.exists(os.path.dirname(file)):
+            os.makedirs(os.path.dirname(file), exist_ok=True)
+        self.scores.to_csv(file, sep="\t")
         if full:
             json.dump(self.scores_full, open("../results/modeval_knownmodules/" + name + ".json", "w"), cls=JSONExtendedEncoder)
 
@@ -150,9 +154,9 @@ class ModevalKnownmodules:
         if full:
             self.scores_full = json.load(open("../results/modeval_knownmodules/" + name + ".json"))
 
-def modevalworker(setting, scores):
-    baseline_names = ["permuted", "sticky", "scalefree"]
-    baselines = {baseline_name:pd.read_table("../results/modeval_knownmodules/baselines_" + baseline_name + ".tsv", index_col=[0, 1,2]) for baseline_name in baseline_names}
+def modevalworker(setting, scores, baseline):
+    if baseline:
+        baselines = pd.read_csv("../results/modeval_knownmodules/baseline.tsv", index_col=[0, 1, 2])
 
     modules = Modules(json.load(open("../" + setting["output_folder"] + "modules.json")))
 
@@ -164,15 +168,22 @@ def modevalworker(setting, scores):
 
     for regnet_name in dataset["knownmodules"].keys():
         for knownmodules_name in dataset["knownmodules"][regnet_name].keys():
-            baselinesoi = {
-                baseline_name:baseline.ix[(dataset["baselinename"], regnet_name, knownmodules_name)].to_dict()
-                for baseline_name, baseline in baselines.items()
-            }
+            # baselinesoi = {
+            #     baseline_name:baseline.ix[(dataset["baselinename"], regnet_name, knownmodules_name)].to_dict()
+            #     for baseline_name, baseline in baselines.items()
+            # }
+            if baseline:
+                baselineoi = {
+                    baseline_name:baseline.loc[(baseline_name, regnet_name, knownmodules_name)].to_dict()
+                    for baseline_name, baseline in baselines.groupby(level = "baseline_name")
+                }
+            else:
+                baselineoi = None
 
             knownmodules_location = dataset["knownmodules"][regnet_name][knownmodules_name]
             knownmodules = Modules(json.load(open("../" + knownmodules_location)))
 
-            settingscores_goldstandard = modevalscorer(modules, knownmodules, baselinesoi)
+            settingscores_goldstandard = modevalscorer(modules, knownmodules, baselineoi)
 
             settingscores_goldstandard["settingid"] = setting["settingid"]
 
@@ -195,8 +206,9 @@ def modevalscorer(modules, knownmodules, baselines=None):
     return settingscores
 
 class ModevalCoverage:
-    def __init__(self, settings):
+    def __init__(self, settings, baseline = False):
         self.settings = settings
+        self.baseline = baseline
 
     def run(self, pool):
         jobs = []
@@ -208,7 +220,7 @@ class ModevalCoverage:
         print("Evaluating a total of " + str(len(self.settings)) + " settings.")
 
         for setting in self.settings:
-            params_pool.append((setting, scores))
+            params_pool.append((setting, scores, self.baseline))
 
         pool.starmap(modeval_coverage_worker, params_pool)
 
@@ -219,7 +231,10 @@ class ModevalCoverage:
         manager.shutdown()
 
     def save(self, name, full=True):
-        self.scores.to_csv("../results/modeval_coverage/" + name + ".tsv", sep="\t")
+        file = "../results/modeval_coverage/"+ name+ ".tsv"
+        if not os.path.exists(os.path.dirname(file)):
+            os.makedirs(os.path.dirname(file), exist_ok=True)
+        self.scores.to_csv(file, sep="\t")
         if full:
             json.dump(self.scores_full, open("../results/modeval_coverage/" + name + ".json", "w"), cls=JSONExtendedEncoder)
 
@@ -242,12 +257,11 @@ class Modeval:
         if full:
             self.scores_full = json.load(open("../results/{scoring_folder}/{settings_name}.json".format(scoring_folder=scoring_folder, name = name)))
 
-def modeval_coverage_worker(setting, scores, verbose=False):
+def modeval_coverage_worker(setting, scores, baseline, verbose=False):
     dataset = json.load(open("../" + setting["dataset_location"]))
 
-    baseline_names = ["permuted", "sticky", "scalefree"]
-    baselines = {baseline_name:pd.read_table("../results/modeval_coverage/baselines_" + baseline_name + ".tsv", index_col=[0, 1]) for baseline_name in baseline_names}
-    baselines = {baseline_name:baseline.ix[dataset["baselinename"]] for baseline_name, baseline in baselines.items()}
+    if baseline:
+        baselines = pd.read_csv("../results/modeval_coverage/baseline.csv", index_col = 0)
 
     runinfo = json.load(open("../" + setting["output_folder"] + "runinfo.json"))
     modules = Modules(json.load(open("../" + setting["output_folder"] + "modules.json")))
@@ -265,8 +279,9 @@ def modeval_coverage_worker(setting, scores, verbose=False):
 
     # calculate the average over different regulatory circuit cutoffs
     settingscores = pd.DataFrame(subscores).mean().to_dict()
-    for baseline_name, baseline in baselines.items():
-        settingscores["aucodds_" + baseline_name] = settingscores["aucodds"]/baseline["aucodds"].mean()
+    if baseline:
+        for baseline_name, baseline_subset in baselines.groupby(level = "baseline_name"):
+            settingscores["aucodds_" + baseline_name] = settingscores["aucodds"]/baseline_subset["aucodds"].mean()
 
     settingscores["settingid"] = setting["settingid"]
     settingscores["goldstandard"] = "regcircuit"
@@ -303,7 +318,7 @@ def modbindevalscorer(modules, binding):
         pvals = np.apply_along_axis(filterfisher, 0, values)
         qvals = []
         for pvalrow in pvals.reshape(tps.shape):
-            _,qvalrow,_,_ = np.array(multipletests(pvalrow))
+            _,qvalrow,_,_ = np.array(multipletests(pvalrow), dtype=object)
             qvals.append(qvalrow)
         qvals = pd.DataFrame(qvals, index=tps.index, columns=tps.columns)
         pvals = pd.DataFrame(pvals.reshape(tps.shape), index=tps.index, columns=tps.columns)
@@ -360,6 +375,7 @@ class ModevalFunctional:
         manager.shutdown()
 
     def save(self, settings_name):
+        os.makedirs(os.path.dirname(self.scoring_folder + settings_name + ".tsv"), exist_ok=True)
         self.scores.to_csv(self.scoring_folder + settings_name + ".tsv", sep="\t")
         if hasattr(self, 'scores_full'):
             json.dump(self.scores_full, open(self.scoring_folder + settings_name + ".json", "w"), cls=JSONExtendedEncoder)
@@ -388,7 +404,7 @@ def cal_bhi(modules, connectivity):
     bhi = 0
     for module in modules:
         if len(module) > 1:
-            bhi += 1/(len(module) * (len(module) - 1)) * connectivity.ix[module, module].sum().sum()
+            bhi += 1/(len(module) * (len(module) - 1)) * connectivity.loc[module, module].sum().sum()
     bhi = 1/len(modules) * bhi
 
     return bhi
@@ -419,7 +435,7 @@ def test_enrichment(modules, membership):
         pvals = np.apply_along_axis(filterfisher, 0, values)
         qvals = []
         for pvalrow in pvals.reshape(tps.shape):
-            _,qvalrow,_,_ = np.array(multipletests(pvalrow))
+            _,qvalrow,_,_ = np.array(multipletests(pvalrow), dtype=object)
             qvals.append(qvalrow)
         qvals = pd.DataFrame(qvals, index=tps.index, columns=tps.columns)
         pvals = pd.DataFrame(pvals.reshape(tps.shape), index=tps.index, columns=tps.columns)
@@ -433,12 +449,19 @@ def cal_aucodds(odds, cutoffs=np.linspace(0, 3, 100)):
     if len(maxodds) == 0:
         return 0
 
+    maxodds[maxodds == 0] = 1e-10
+
     stillenriched = [(np.log10(maxodds) >= cutoff).sum()/len(maxodds) for cutoff in cutoffs]
+    if  (cutoffs[-1] - cutoffs[0]) == 0:
+        return 0
     return np.trapz(stillenriched, cutoffs) / (cutoffs[-1] - cutoffs[0])
 
 def cal_faucodds(odds, cutoffs=np.linspace(0, 3, 100)):
     aucodds1 = cal_aucodds(odds, cutoffs)
     aucodds2 = cal_aucodds(odds.T, cutoffs)
+
+    if aucodds1 + aucodds2 == 0:
+        return 0
 
     return 2/(1/aucodds1 + 1/aucodds2)
 

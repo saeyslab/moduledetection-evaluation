@@ -25,6 +25,44 @@ def agglom(E, k=100, linkage="complete", simdist_function="pearson_correlation",
     modules = convert_labels2modules(agglom.labels_, E.columns)
     return modules
 
+def ica_zscore(E, k=200, stdcutoff=1e-3, seed=None, **kwargs):
+    source = _ica_fastica(E, k, seed)
+    modules = _ica_zscore(E, source, stdcutoff)
+
+    return modules
+
+def _ica_fastica(E, k, seed=None):
+    ica = sklearn.decomposition.FastICA(n_components=int(k), random_state=seed)
+    source = ica.fit_transform(standardize(E).T)
+
+    return source
+
+def _ica_zscore(E, source, stdcutoff):
+    modules = []
+    for source_row in source.T:
+        genes = E.columns[source_row < -source_row.std() * stdcutoff].tolist() + E.columns[source_row > +source_row.std() * stdcutoff].tolist()
+
+        modules.append(Module(genes))
+    return modules
+
+def meanshift(E, bandwidth=None, cluster_all=True, **kwargs):
+    if bandwidth is None or bandwidth == "auto":
+        meanshift = sklearn.cluster.MeanShift(cluster_all=cluster_all)
+    else:
+        meanshift = sklearn.cluster.MeanShift(bandwidth=bandwidth, cluster_all=cluster_all)
+
+    meanshift.fit(standardize(E).T)
+    meanshift.labels_
+
+    modules = convert_labels2modules(meanshift.labels_, E.columns)
+
+    return modules
+
+def baseline_permuted(modules, **kwargs):
+    modules = Modules(modules)
+    modules = modules.shuffle()
+    return modules
+
 ## utility functions
 def convert_labels2modules(labels, G, ignore_label=None):
     modules = defaultdict(Module)

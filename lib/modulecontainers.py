@@ -72,7 +72,7 @@ class Modules(list):
             chosen = np.random.permutation(chosen).tolist()
             genemap = np.array([G[i] if i not in chosenids else chosen.pop(0) for i in range(len(G))])
         
-        shuffledmodules = Modules([genemap[np.where(row)] for row in membership.T.as_matrix()])
+        shuffledmodules = Modules([genemap[np.where(row)] for row in membership.T.values])
 
         return shuffledmodules
 

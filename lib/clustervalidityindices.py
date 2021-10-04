@@ -156,14 +156,14 @@ def ptbiserial(modules, distances):
     if len(modules) < 2:
         return -np.inf
 
-    connectivity = modules.cal_connectivity(distances.columns).astype(np.float)
+    connectivity = modules.cal_connectivity(distances.columns).astype(float)
     distances = distances.copy()
 
     np.fill_diagonal(connectivity.values, np.nan)
     np.fill_diagonal(distances.values, np.nan)
 
-    connectivity = connectivity.as_matrix().flatten()
-    distances = distances.as_matrix().flatten()
+    connectivity = connectivity.values.flatten()
+    distances = distances.values.flatten()
 
     connectivity = 1-connectivity[~np.isnan(connectivity)]
     distances = distances[~np.isnan(distances)]
