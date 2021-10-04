@@ -6,6 +6,9 @@
 tmp/
 .Rhistory
 results/
+results2/
 *.o
 data
 workspace.code-workspace
+results.zip
+data.zip
