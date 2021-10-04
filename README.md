@@ -1,6 +1,6 @@
 # Dependencies
 
-Data can be downloaded from zenodo: https://zenodo.org/record/5532578 (Note: we added a new version since 2021/10/04). Unzipping the files and you should get a data and results folder in the root directory of the repo.
+Data can be downloaded from zenodo: https://zenodo.org/record/5532578 (Note: we added a new version since 2021/10/04). Unzip the files and you should get a data and results folder in the root directory of the repo.
 
 Several scientific python packages are required to run the code. The easiest way to do this is to use the python 3.X Anaconda distribution (https://www.continuum.io/downloads). Alternatively you can install the manually using pip:
 * Jupyter
