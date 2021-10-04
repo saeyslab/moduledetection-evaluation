@@ -33,6 +33,7 @@ def genie3(E, R, numcores=24, **kwargs):
         with open(tmpdir + "/R.csv", "w") as outfile:
             outfile.write("\n".join(R))
 
+        # PERSOFTWARELOCATION is the location in which the software is installed
         Rcommand = """
         source("{genie3_location}")
 
@@ -69,6 +70,7 @@ def clr(E, R, **kwargs):
     with TemporaryDirectory() as tmpdir:
         E.to_csv(tmpdir + "/E.csv", sep="\t")
 
+        # PERSOFTWARELOCATION is the location in which the software is installed
         matlab_command = """
         addpath '""" + os.environ["PERSOFTWARELOCATION"] + """/CLRv1.2.2/Code/';
         data = transpose(dlmread('""" + tmpdir + """/E.csv','\\t', 1, 1));
@@ -106,6 +108,7 @@ def tigress(E, R, tigress_R= 500, tigress_L=5, tigress_alpha=0.2, **kwargs):
 
         # call matlab
 
+        # PERSOFTWARELOCATION is the location in which the software is installed
         matlab_command = """
         addpath(genpath('""" + os.environ["PERSOFTWARELOCATION"] + """/TIGRESS-PKG-2.1/'));dataset = read_data('""" + tmpdir + """/', 'E');
         dataset.expdata = scale_data(dataset.expdata);

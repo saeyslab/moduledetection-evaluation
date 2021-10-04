@@ -24,7 +24,8 @@ def genomica(E, R, n=100, **kwargs):
         R_genomica = {gid:g for gid, g in enumerate(E_genomica.index) if g in R and g in E.columns}
         with open(tmpdir + "/regulators.csv", "w") as outfile:
             outfile.write("\n".join([str(gid) for gid in R_genomica.keys()]))
-            
+        
+        # PERSOFTWARELOCATION is the location in which the software is installed
         genomica_loc = os.environ["PERSOFTWARELOCATION"] + "/Genomica/new/"
         genomica_command = "cd {genomica_loc};java -XX:ParallelGCThreads=1 -Xmx12G -cp .:../Genomica.jar ExampleProgram ".format(**locals())
         
@@ -89,7 +90,8 @@ def merlin(E,R, h=0.6, p=5, r=4, initial_number=300, **kwargs):
         labels = convert_modules2labels(modules, E.columns)
         with open(tmpdir + "/clusterassign.csv", "w") as outfile:
             outfile.write("\n".join([g + "\t" + str(label) for g,label in labels.items()]))
-            
+        
+        # PERSOFTWARELOCATION is the location in which the software is installed
         binary = os.environ["PERSOFTWARELOCATION"] + "/gpdream/modules/Merlin/src/merlin"
         
         command = "{binary} -d {tmpdir}/E.csv -o {tmpdir} -l {tmpdir}/R.csv -c {tmpdir}/clusterassign.csv -v 1 -h {h} -k 300 -p {p} -r {r}".format(**locals())

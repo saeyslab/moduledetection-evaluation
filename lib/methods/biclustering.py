@@ -32,7 +32,7 @@ def isa(E, thr_col=2, thr_row=2, no_seeds=10000, **kwargs):
     risa =  ro.r["isa"]
 
     rresults = risa(
-        standardize(E).as_matrix(), 
+        standardize(E).values, 
         # Workaround to get dots in the parameter names
         **{
             "thr.col":thr_col,
@@ -118,7 +118,7 @@ def biclust(E, biclust_method, biclust_kwargs={}):
     rbiclust = ro.r["biclust"]
     rbiclust_method = ro.r[biclust_method]
 
-    rE = standardize(E).as_matrix()
+    rE = standardize(E).values
     rE = rE.T
 
     if biclust_method == "BCXmotifs":
@@ -154,6 +154,7 @@ def msbe(E, alpha=0.4, beta=0.5, gamma=1.2, refgene="random 500", refcond="rando
     with TemporaryDirectory() as tmpdir:
         standardize(E).to_csv(tmpdir + "/E.csv", sep="\t")
 
+        # PERSOFTWARELOCATION is the location in which the software is installed
         binary = "sh " +os.environ["PERSOFTWARELOCATION"] + "/MSBE_linux_1.0.5/additiveBi"
         command =  "{binary} {tmpdir}/E.csv {alpha} {beta} {gamma} {refgene} {refcond} {tmpdir}/results.txt".format(**locals())
         sp.call(command, shell=True)
@@ -176,6 +177,7 @@ def opsm(E, l=2, **kwargs):
         pd.DataFrame(standardize(E)).T.to_csv(tmpdir + "E.csv", index=0, header=0, sep=" ")
         output_location = os.path.abspath(tmpdir + "/output.txt")
 
+        # PERSOFTWARELOCATION is the location in which the software is installed
         binary = "java -XX:ParallelGCThreads=1 -Xmx1G -jar " + os.environ["PERSOFTWARELOCATION"] + "/OPSM/OPSM.jar"
         command = "{binary} {E_location} {nG} {nC} {output_location} {l}".format(
             binary=binary, 
@@ -218,6 +220,7 @@ def biforce(E, m="o", t=0, **kwargs):
 
         original_wd = os.getcwd()
         try:
+            # PERSOFTWARELOCATION is the location in which the software is installed
             os.chdir(os.environ["PERSOFTWARELOCATION"] + "/BiForceV2/") # change working directory because biclue only looks for the parameter.ini file in the current working directory (...)
             
             sp.call(command, shell=True)
@@ -251,7 +254,7 @@ def fabia(E, n=13, alpha=0.01, cyc=500, spl=0., spz=0.5, non_negative=0, random=
         thresL = ro.NULL
 
     rresults = rfabia(
-        standardize(E).as_matrix().T, 
+        standardize(E).values.T, 
         n,
         alpha,
         cyc,

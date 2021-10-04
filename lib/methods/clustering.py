@@ -16,6 +16,7 @@ try:
 except ImportError:
     "No nimfa"
 
+# rpy2 is required for many methods
 try:
     import rpy2.robjects as ro
     import rpy2.robjects.numpy2ri
@@ -42,6 +43,7 @@ def flame(E, knn=10,threshold=-1, threshold2=-3.0, steps=500, **kwargs):
             outfile.write(str(E.shape[1]) + " " + str(E.shape[0]) + "\n")
             standardize(E).T.to_csv(outfile, index=False, header=False, sep=" ")
 
+        # PERSOFTWARELOCATION is the location in which the software is installed
         binary = os.environ["PERSOFTWARELOCATION"] + "/flame/sample"
         command = "{binary} {tmpdir}/E.csv {knn} {threshold2} {steps} {threshold}".format(**locals())
 
@@ -118,12 +120,12 @@ def spectral_similarity(E, k=100, seed=None, simdist_function="pearson_correlati
 def affinity(E, preference_fraction=0.5, simdist_function="pearson_correlation", damping=0.5, max_iter=200, **kwargs):
     similarities = simdist(E, simdist_function, **kwargs)
 
-    similarities_max, similarities_min = similarities.as_matrix().max(), similarities.as_matrix().min()
+    similarities_max, similarities_min = similarities.values.max(), similarities.values.min()
     preference = (similarities_max - similarities_min) * preference_fraction
 
     ro.packages.importr("apcluster")
 
-    rresults = ro.r["apcluster"](s=ro.Matrix(similarities.as_matrix()), p=preference)
+    rresults = ro.r["apcluster"](s=ro.Matrix(similarities.values), p=preference)
     labels = np.array(ro.r["labels"](rresults, "enum"))
 
     modules = convert_labels2modules(labels, E.columns)
@@ -192,9 +194,9 @@ def sota(E, maxCycles=1000, maxEpochs=1000, distance="euclidean", wcell=0.01, pc
     importr("clValid")
 
     distances = simdist(standardize(E), "euclidean", False, **kwargs)
-    maxDiversity = np.percentile(distances.as_matrix().flatten(), alpha)
+    maxDiversity = np.percentile(distances.values.flatten(), alpha)
 
-    rresults = ro.r["sota"](standardize(E).T.as_matrix(), maxCycles, maxEpochs, distance, wcell, pcell, scell, delta, neighb_level, maxDiversity, unrest_growth)
+    rresults = ro.r["sota"](standardize(E).T.values, maxCycles, maxEpochs, distance, wcell, pcell, scell, delta, neighb_level, maxDiversity, unrest_growth)
 
     modules = convert_labels2modules(list(rresults.rx2("clust")), E.columns)
 
@@ -231,6 +233,7 @@ HOMOGENEITY
 {homogeneity}
             """.format(tmpdir=tmpdir, homogeneity=homogeneity))
 
+        # PERSOFTWARELOCATION is the location in which the software is installed
         click_location = os.environ["PERSOFTWARELOCATION"] + "/Expander/click.exe"
 
         command = "{click_location} {tmpdir}/clickParams.txt".format(**locals())
@@ -268,7 +271,7 @@ def clues(E, disMethod="1-corr", n0=300, alpha=0.05, eps=1e-4, itmax=20, strengt
     ro.packages.importr("clues")
 
     rresults = ro.r["clues"](
-        ro.Matrix(standardize(E).T.as_matrix()),
+        ro.Matrix(standardize(E).T.values),
         disMethod=disMethod,
         n0=n0,
         alpha=alpha,
@@ -311,6 +314,7 @@ def transitivity(E, threshold=0.1, simdist_function="pearson_correlation", cutof
             fuzzytext = " -fuzzy " + str(cutoff)
             resultsfile = "results.tsv_fuzzy"
         # run the transitivity clustering tool
+        # PERSOFTWARELOCATION is the location in which the software is installed
         command = "java -jar " + os.environ["PERSOFTWARELOCATION"] + "/TransClust.jar -i {tmpdir}/cost.tsv -o {tmpdir}/results.tsv -verbose -sim {tmpdir}/sim.tsv {fuzzytext}".format(**locals())
 
         sp.call(command, shell=True)
@@ -395,10 +399,6 @@ def nmf_max(E, k=50, **kwargs):
     modules = []
 
     source = _nmf(E, k)
-    # for column in fit.fit.connectivity():
-    #     module = Module(E.columns[(column[0] != 0).tolist()[0]])
-    #     if len(module) > 0:
-    #         modules.append(module)
     modules = convert_labels2modules(source.argmax(0), E.columns)
     return modules
 
@@ -410,14 +410,12 @@ def nmf_tail(E, k=50, tailcutoff=0.05, **kwargs):
 
 def _nmf(E, k):
     if E.min().min() < 0:
-        V = E.as_matrix() - E.min().min()
+        V = E.values - E.min().min()
     else:
-        V = E.as_matrix()
+        V = E.values
 
     nmf = nimfa.Nmf(V, rank=int(k), seed="random_vcol", max_iter=20000, update='euclidean')
     fit = nmf()
-
-    print(nmf.rss())
 
     return fit.fit.H.A.T
 
@@ -447,12 +445,11 @@ def _ica_zscore(E, source, stdcutoff):
     return modules
 
 def _ica_fdrtool(E, source, qvalcutoff):
+    # load fdr
     importr("fdrtool")
     rfdrtool = ro.r["fdrtool"]
 
     modules = []
-
-    print("qvalcutoff: " + str(qvalcutoff))
 
     for source_row in source.T:
         rresults = rfdrtool(ro.FloatVector(source_row), plot=False, cutoff_method="fndr", verbose=False)
@@ -468,8 +465,6 @@ def _ica_fdrtool_signed(E, source, qvalcutoff):
     rfdrtool = ro.r["fdrtool"]
 
     modules = []
-
-    print("qvalcutoff: " + str(qvalcutoff))
 
     for source_row in source.T:
         rresults = rfdrtool(ro.FloatVector(source_row), plot=False, cutoff_method="fndr", verbose=False)
@@ -514,7 +509,7 @@ def _pca(E, k):
 
     return pca.components_.T
 
-## utility functions
+## Utility functions
 def convert_labels2modules(labels, G, ignore_label=None):
     modules = defaultdict(Module)
     for label, gene in zip(labels, G):
