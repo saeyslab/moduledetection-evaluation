@@ -7,7 +7,9 @@ import shutil
 
 from util import JSONExtendedEncoder
 
+# this will import all methods
 from clustering import *
+from biclustering import *
 
 import pandas as pd
 import numpy as np
@@ -23,6 +25,13 @@ if len(sys.argv) > 4:
 	originaltime = int(sys.argv[4])
 else:
 	originaltime = 0
+
+print(output_folder)
+
+# check if output already exists, skip if true
+if os.path.exists(output_folder + "method.json"):
+	print("Output already exists, skipping")
+	sys.exit(0)
 
 if dataset["expression"].endswith(".pkl"):
 	E = pd.read_pickle(dataset["expression"])
