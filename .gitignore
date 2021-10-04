@@ -8,3 +8,4 @@ tmp/
 results/
 *.o
 data
+workspace.code-workspace
