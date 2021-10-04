@@ -14,9 +14,10 @@ Several scientific python packages are required to run the code. The easiest way
 * git+https://github.com/jfrelinger/cython-munkres-wrapper
 * fisher
 
-The Cython code for the evaluation metrics should also be compiled. For this, go to /lib and run `python3 setup.py build_ext --inplace`
+The Cython code for the evaluation metrics should also be compiled. For this, go to /lib and run `python setup.py build_ext --inplace`
 
-The Cython munkres library should be installed:
-`sudo pip3 install git+https://github.com/jfrelinger/cython-munkres-wrapper`
+The Cython munkres library should be installed using e.g. pip install git+https://github.com/jfrelinger/cython-munkres-wrapper
 
 After installation, run jupyter notebook in the notebooks/ folder. This folder contains several Jupter notebooks, each pertaining to a different part of the evaluation study. The notebooks starting with 0- are optional if you downloaded the results folder.
+
+Code was tested on python 3.7 to 3.9
