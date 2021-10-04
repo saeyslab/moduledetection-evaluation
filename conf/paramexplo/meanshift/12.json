@@ -1,0 +1,1 @@
+{"params": {"method": "meanshift", "cluster_all": 1, "bandwidth": 30.0}, "location": "conf/paramexplo/meanshift/12.json", "seed": 0}
