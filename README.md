@@ -1,6 +1,6 @@
 # Dependencies
 
-Data can be downloaded from zenodo: https://zenodo.org/record/1157938 These files should be put into the data folder
+Data can be downloaded from zenodo: https://zenodo.org/record/5532578 (Note: we added a new version since 2021/10/04). Unzipping the files and you should get a data and results folder in the root directory of the repo.
 
 Several scientific python packages are required to run the code. The easiest way to do this is to use the python 3.X Anaconda distribution (https://www.continuum.io/downloads). Alternatively you can install the manually using pip:
 * Jupyter
@@ -19,4 +19,4 @@ The Cython code for the evaluation metrics should also be compiled. For this, go
 The Cython munkres library should be installed:
 `sudo pip3 install git+https://github.com/jfrelinger/cython-munkres-wrapper`
 
-After installation, run jupyter notebook in the notebooks/ folder. This folder contains several Jupter notebooks, each pertaining to a different part of the evaluation study.
+After installation, run jupyter notebook in the notebooks/ folder. This folder contains several Jupter notebooks, each pertaining to a different part of the evaluation study. The notebooks starting with 0- are optional if you downloaded the results folder.
