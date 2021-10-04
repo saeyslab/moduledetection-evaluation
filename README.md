@@ -9,6 +9,10 @@ Several scientific python packages are required to run the code. The easiest way
 * numpy
 * statsmodels
 * scitkit-learn
+* matplotlib
+* cython
+* git+https://github.com/jfrelinger/cython-munkres-wrapper
+* fisher
 
 The Cython code for the evaluation metrics should also be compiled. For this, go to /lib and run `python3 setup.py build_ext --inplace`
 
